@@ -180,27 +180,36 @@ public:
     }
 };
 
+// =========================================================================
 // Task 1: MST Optimization using Kruskal's algorithm
+// Goal: Identify the minimum construction cost layout that keeps all cities connected.
+// =========================================================================
 std::vector<Edge> solve_task1_mst(const Graph& graph) {
     std::cout << "\n--------------------------------------------\n";
     std::cout << "--- Task 1: MST Optimization ---\n";
     std::cout << "--------------------------------------------\n";
 
+    // 1. Gather all edges in the graph
     std::vector<Edge> all_edges = graph.get_all_edges();
     long long original_cost = 0;
     for (const auto& edge : all_edges) {
         original_cost += edge.weight;
     }
 
+    // 2. Sort all candidate edges in ascending order of their weights (physical distances)
     std::sort(all_edges.begin(), all_edges.end());
+
+    // 3. Initialize the Disjoint Set Union (DSU) structure for Kruskal's algorithm
     std::vector<int> parent(graph.num_nodes);
     for (int i = 0; i < graph.num_nodes; ++i) parent[i] = i;
 
+    // Find function with path compression
     auto find = [&parent](auto& self, int i) -> int {
         if (parent[i] == i) return i;
         return parent[i] = self(self, parent[i]);
     };
 
+    // Union function to connect components (returns true if a union occurred)
     auto union_nodes = [&find, &parent](int i, int j) -> bool {
         int root_i = find(find, i);
         int root_j = find(find, j);
@@ -214,16 +223,19 @@ std::vector<Edge> solve_task1_mst(const Graph& graph) {
     std::vector<Edge> mst_edges;
     long long mst_cost = 0;
 
+    // 4. Select edges for the Spanning Tree sequentially without creating cycles
     for (const auto& edge : all_edges) {
         if (union_nodes(edge.u, edge.v)) {
             mst_edges.push_back(edge);
             mst_cost += edge.weight;
+            // Stop when we have selected exactly N - 1 edges
             if (mst_edges.size() == static_cast<size_t>(graph.num_nodes - 1)) {
                 break;
             }
         }
     }
 
+    // 5. Calculate and display cost savings statistics
     double savings_pct = (static_cast<double>(original_cost - mst_cost) / original_cost) * 100.0;
 
     std::cout << "Original Network Cost = " << original_cost << " km\n";
@@ -242,28 +254,36 @@ std::vector<Edge> solve_task1_mst(const Graph& graph) {
     return mst_edges;
 }
 
+
+// =========================================================================
 // Task 2: Strategic City Identification using degree centrality
+// Goal: Identify key hubs to allocate central developmental roles (Airport, Logistics, Junction).
+// =========================================================================
 void solve_task2_centrality(const Graph& graph) {
     std::cout << "\n--------------------------------------------\n";
     std::cout << "--- Task 2: Strategic City Identification ---\n";
     std::cout << "--------------------------------------------\n";
 
+    // 1. Compute the Degree Centrality (number of direct edges connected to each node)
     std::vector<std::pair<int, int>> centrality;
     for (int u = 0; u < graph.num_nodes; ++u) {
         centrality.push_back({static_cast<int>(graph.adj[u].size()), u});
     }
 
+    // 2. Sort cities in descending order of centrality degree (secondary sort by ID)
     std::sort(centrality.begin(), centrality.end(), [](const auto& a, const auto& b) {
         if (a.first != b.first) return a.first > b.first;
         return a.second < b.second;
     });
 
+    // 3. Print the top 10 most connected cities
     std::cout << "Top 10 Cities by Degree Centrality:\n";
     for (int rank = 0; rank < 10; ++rank) {
         std::cout << "  Rank " << rank + 1 << ": City " << centrality[rank].second + 1 
                   << " (Degree: " << centrality[rank].first << ")\n";
     }
 
+    // 4. Map the top three candidates to their strategic infrastructure roles
     std::cout << "\nTop Candidates:\n";
     std::vector<std::string> roles = {"Airport", "Logistics Hub", "Railway Junction"};
     for (int i = 0; i < 3; ++i) {
@@ -274,7 +294,11 @@ void solve_task2_centrality(const Graph& graph) {
               << " is a major hub and is recommended for an international airport.\n";
 }
 
-// Helper to run Dijkstra's algorithm skipping deleted elements
+
+// =========================================================================
+// Dijkstra's Algorithm with Node/Edge Avoidance (For Disaster Recovery)
+// Calculates the shortest path between start and end, skipping destroyed nodes/edges.
+// =========================================================================
 std::pair<double, std::vector<int>> run_dijkstra(
     const Graph& graph, 
     int start, 
@@ -282,6 +306,7 @@ std::pair<double, std::vector<int>> run_dijkstra(
     const std::set<int>& removed_nodes, 
     const std::set<std::pair<int, int>>& removed_edges
 ) {
+    // If the start or destination city itself is destroyed, routing is impossible
     if (removed_nodes.count(start) || removed_nodes.count(end)) {
         return {std::numeric_limits<double>::infinity(), {}};
     }
@@ -290,6 +315,7 @@ std::pair<double, std::vector<int>> run_dijkstra(
     std::vector<int> parent(graph.num_nodes, -1);
     dist[start] = 0.0;
 
+    // Min-heap priority queue storing {distance, node_id} pairs
     typedef std::pair<double, int> pq_elem;
     std::priority_queue<pq_elem, std::vector<pq_elem>, std::greater<pq_elem>> pq;
     pq.push({0.0, start});
@@ -301,15 +327,19 @@ std::pair<double, std::vector<int>> run_dijkstra(
         if (u == end) break;
         if (d > dist[u]) continue;
 
+        // Iterate through all adjacent nodes
         for (const auto& edge : graph.adj[u]) {
             int v = edge.first;
             double w = edge.second;
 
+            // Skip if the adjacent city is destroyed
             if (removed_nodes.count(v)) continue;
 
+            // Skip if the connecting road is destroyed
             std::pair<int, int> current_edge = (u < v) ? std::make_pair(u, v) : std::make_pair(v, u);
             if (removed_edges.count(current_edge)) continue;
 
+            // Relaxation step
             if (dist[u] + w < dist[v]) {
                 dist[v] = dist[u] + w;
                 parent[v] = u;
@@ -318,10 +348,12 @@ std::pair<double, std::vector<int>> run_dijkstra(
         }
     }
 
+    // Return infinity if no route exists
     if (dist[end] == std::numeric_limits<double>::infinity()) {
         return {std::numeric_limits<double>::infinity(), {}};
     }
 
+    // Reconstruct path from destination to start using parent pointers
     std::vector<int> path;
     int curr = end;
     while (curr != -1) {
@@ -333,7 +365,10 @@ std::pair<double, std::vector<int>> run_dijkstra(
     return {dist[end], path};
 }
 
+// =========================================================================
 // Task 3: Disaster Recovery Routing
+// Goal: Re-route traffic around natural disaster zones (destroyed cities & roads).
+// =========================================================================
 void solve_task3_disaster(const Graph& graph) {
     std::cout << "\n--------------------------------------------\n";
     std::cout << "--- Task 3: Disaster Recovery Routing ---\n";
@@ -384,6 +419,7 @@ void solve_task3_disaster(const Graph& graph) {
         std::cout << "Enter Destination City D: ";
         std::cin >> dest_d; dest_d--;
     } else {
+        // Default Demo Settings
         removed_nodes = {11, 54}; // City 12 and City 55
         removed_edges = {{11, 90}, {43, 66}}; // Roads 12-91 and 44-67
         src_a = 0;      // City 1
@@ -397,6 +433,7 @@ void solve_task3_disaster(const Graph& graph) {
                   << ", B = City " << src_b + 1 << " to D = City " << dest_d + 1 << "\n\n";
     }
 
+    // Run Dijkstra routing bypasses
     auto [dist_a, path_a] = run_dijkstra(graph, src_a, dest_d, removed_nodes, removed_edges);
     auto [dist_b, path_b] = run_dijkstra(graph, src_b, dest_d, removed_nodes, removed_edges);
 
@@ -431,7 +468,11 @@ void solve_task3_disaster(const Graph& graph) {
     }
 }
 
-// Helper to run Dijkstra's incorporating traffic penalties
+
+// =========================================================================
+// Dijkstra's Algorithm scaled with Traffic Multipliers
+// Computes travel times/effective distance considering traffic congestion scales.
+// =========================================================================
 std::pair<double, std::vector<int>> run_dijkstra_traffic(const Graph& graph, int start, int end) {
     std::vector<double> dist(graph.num_nodes, std::numeric_limits<double>::infinity());
     std::vector<int> parent(graph.num_nodes, -1);
@@ -451,6 +492,7 @@ std::pair<double, std::vector<int>> run_dijkstra_traffic(const Graph& graph, int
         for (const auto& edge : graph.adj[u]) {
             int v = edge.first;
             double base_w = edge.second;
+            // Fetch multiplier: Low = 1.0, Medium = 1.5, High = 2.5
             double mult = graph.get_traffic_multiplier(u, v);
             double traffic_w = base_w * mult;
 
@@ -477,6 +519,7 @@ std::pair<double, std::vector<int>> run_dijkstra_traffic(const Graph& graph, int
     return {dist[end], path};
 }
 
+// Helper to compute physical distance of a path (unweighted by traffic)
 int get_path_physical_dist(const Graph& graph, const std::vector<int>& path) {
     int dist = 0;
     for (size_t i = 0; i + 1 < path.size(); ++i) {
@@ -492,7 +535,10 @@ int get_path_physical_dist(const Graph& graph, const std::vector<int>& path) {
     return dist;
 }
 
+// =========================================================================
 // Task 4: Traffic-Aware Smart Routing
+// Goal: Bypass congested areas using dynamic route scaling algorithms.
+// =========================================================================
 void solve_task4_traffic(const Graph& graph) {
     std::cout << "\n--------------------------------------------\n";
     std::cout << "--- Task 4: Traffic-Aware Smart Routing ---\n";
@@ -515,7 +561,10 @@ void solve_task4_traffic(const Graph& graph) {
                   << " to Destination: City " << dest + 1 << "\n\n";
     }
 
+    // 1. Calculate the basic path (without considering traffic penalties)
     auto [normal_cost, normal_path] = run_dijkstra(graph, src, dest, {}, {});
+    
+    // 2. Calculate the traffic-aware optimized path
     auto [traffic_eff_cost, traffic_path] = run_dijkstra_traffic(graph, src, dest);
     int traffic_phys_dist = get_path_physical_dist(graph, traffic_path);
 
@@ -548,12 +597,16 @@ void solve_task4_traffic(const Graph& graph) {
     std::cout << "Delay = " << std::fixed << std::setprecision(1) << delay_pct << "%\n";
 }
 
-// Helper to count components using BFS
+// =========================================================================
+// BFS Traversal to count connected components in the graph
+// Used to identify cut-vertices and bridges.
+// =========================================================================
 int count_connected_components(const Graph& graph, int removed_node = -1, std::pair<int, int> removed_edge = {-1, -1}) {
     std::vector<bool> visited(graph.num_nodes, false);
     int count = 0;
 
     for (int start = 0; start < graph.num_nodes; ++start) {
+        // Skip the node currently flagged as removed/destroyed
         if (start == removed_node) continue;
         if (!visited[start]) {
             count++;
@@ -565,8 +618,10 @@ int count_connected_components(const Graph& graph, int removed_node = -1, std::p
                 int u = q[head++];
                 for (const auto& edge : graph.adj[u]) {
                     int v = edge.first;
+                    // Skip edge target if the node is removed
                     if (v == removed_node) continue;
                     
+                    // Skip edge if it is flagged as removed
                     if ((u == removed_edge.first && v == removed_edge.second) ||
                         (u == removed_edge.second && v == removed_edge.first)) {
                         continue;
@@ -583,19 +638,24 @@ int count_connected_components(const Graph& graph, int removed_node = -1, std::p
     return count;
 }
 
+// =========================================================================
 // Task 5: Critical Infrastructure Analysis
+// Goal: Diagnose single points of failure (cut-vertices/bridges) via BFS checks.
+// =========================================================================
 void solve_task5_criticality(const Graph& graph) {
     std::cout << "\n--------------------------------------------\n";
     std::cout << "--- Task 5: Critical Infrastructure Analysis ---\n";
     std::cout << "--------------------------------------------\n";
     std::cout << "Analyzing graph connectivity (" << graph.num_nodes << " nodes)... Please wait...\n";
 
+    // 1. Establish the baseline connected components count (typically 1)
     int base_components = count_connected_components(graph);
     std::cout << "Base Component Count = " << base_components << "\n";
 
     int max_node_components = base_components;
     int most_critical_node = -1;
 
+    // 2. Bruteforce nodes: Remove each node one-by-one and count splits
     for (int u = 0; u < graph.num_nodes; ++u) {
         int comps = count_connected_components(graph, u);
         if (comps > max_node_components) {
@@ -608,6 +668,7 @@ void solve_task5_criticality(const Graph& graph) {
     std::pair<int, int> most_critical_edge = {-1, -1};
     std::vector<Edge> all_edges = graph.get_all_edges();
 
+    // 3. Bruteforce edges: Remove each edge one-by-one and count splits
     for (const auto& edge : all_edges) {
         int comps = count_connected_components(graph, -1, {edge.u, edge.v});
         if (comps > max_edge_components) {
@@ -632,6 +693,7 @@ void solve_task5_criticality(const Graph& graph) {
         std::cout << "  Most Critical Road: None (No single road splits the graph)\n";
     }
 }
+
 
 void display_menu() {
     std::cout << "\n============================================\n";

@@ -1,7 +1,7 @@
 # CS203: Smart Transportation Network Planning and Resilience Analysis
 Course Project on Graph Theory and Algorithmic Optimization
 
-Developed by **Sumanth Reddy Kamjula** (Roll No: `240510`), B.Tech CSE, Indian Institute of Technology Kanpur (IITK).
+Submitted By: **Kamjula Sumanth Reddy** (Roll No: `240510`), B.Tech CSE, IIT Kanpur
 
 ---
 
