@@ -235,24 +235,23 @@ std::vector<Edge> solve_task1_mst(const Graph& graph) {
         }
     }
 
-    // 5. Calculate and display cost savings statistics
+    // 5. Calculate and display cost savings statistics in exact PDF format
     double savings_pct = (static_cast<double>(original_cost - mst_cost) / original_cost) * 100.0;
 
-    std::cout << "Original Network Cost = " << original_cost << " km\n";
-    std::cout << "Optimized MST Cost    = " << mst_cost << " km\n";
-    std::cout << "Total Cost Saved      = " << std::fixed << std::setprecision(1) << savings_pct << " %\n\n";
+    std::cout << "Original Cost = " << original_cost << "\n";
+    std::cout << "MST Cost = " << mst_cost << "\n";
+    std::cout << "Cost Saved = " << std::fixed << std::setprecision(1) << savings_pct << " %\n";
 
-    std::cout << "Selected Roads (First 10):\n";
+    std::cout << "Selected Roads:\n";
     for (size_t i = 0; i < std::min(static_cast<size_t>(10), mst_edges.size()); ++i) {
-        std::cout << "  Road " << i + 1 << ": City " << mst_edges[i].u + 1 
-                  << " to City " << mst_edges[i].v + 1 
-                  << " (" << mst_edges[i].weight << " km)\n";
+        std::cout << "(" << mst_edges[i].u + 1 << "," << mst_edges[i].v + 1 << ")\n";
     }
-    std::cout << "... and " << mst_edges.size() - 10 << " more roads.\n\n";
+    std::cout << "...\n";
     std::cout << "[All " << mst_edges.size() << " structural spans successfully written to path buffer]\n";
 
     return mst_edges;
 }
+
 
 
 // =========================================================================
@@ -276,23 +275,23 @@ void solve_task2_centrality(const Graph& graph) {
         return a.second < b.second;
     });
 
-    // 3. Print the top 10 most connected cities
-    std::cout << "Top 10 Cities by Degree Centrality:\n";
+    // 3. Print the top 10 most connected cities in expected format
     for (int rank = 0; rank < 10; ++rank) {
-        std::cout << "  Rank " << rank + 1 << ": City " << centrality[rank].second + 1 
-                  << " (Degree: " << centrality[rank].first << ")\n";
+        std::cout << "Rank " << rank + 1 << " -> City " << centrality[rank].second + 1 
+                  << " -> Degree " << centrality[rank].first << "\n";
     }
 
     // 4. Map the top three candidates to their strategic infrastructure roles
-    std::cout << "\nTop Candidates:\n";
-    std::vector<std::string> roles = {"Airport", "Logistics Hub", "Railway Junction"};
-    for (int i = 0; i < 3; ++i) {
-        std::cout << "  - " << roles[i] << ": City " << centrality[i].second + 1 << "\n";
-    }
+    std::cout << "\nTop Development Candidates:\n";
+    std::cout << "* Airport: City " << centrality[0].second + 1 << "\n";
+    std::cout << "* Logistics Hub: City " << centrality[1].second + 1 << "\n";
+    std::cout << "* Railway Junction: City " << centrality[2].second + 1 << "\n\n";
 
-    std::cout << "\nRecommendation: City " << centrality[0].second + 1 
-              << " is a major hub and is recommended for an international airport.\n";
+    std::cout << "Recommendations generated:\n";
+    std::cout << "\"City " << centrality[0].second + 1 << " is connected to " << centrality[0].first 
+              << " other cities and is a strong candidate for an international airport.\"\n";
 }
+
 
 
 // =========================================================================
@@ -437,36 +436,29 @@ void solve_task3_disaster(const Graph& graph) {
     auto [dist_a, path_a] = run_dijkstra(graph, src_a, dest_d, removed_nodes, removed_edges);
     auto [dist_b, path_b] = run_dijkstra(graph, src_b, dest_d, removed_nodes, removed_edges);
 
+    std::cout << "Route from City " << src_a + 1 << " to City " << dest_d + 1 << ":\n";
     if (dist_a != std::numeric_limits<double>::infinity()) {
-        std::cout << "Route from City " << src_a + 1 << " to City " << dest_d + 1 
-                  << ": Distance = " << static_cast<int>(dist_a) << " km\n  Path: ";
-        for (size_t i = 0; i < std::min(static_cast<size_t>(5), path_a.size()); ++i) {
-            std::cout << "City " << path_a[i] + 1 << (i + 1 < path_a.size() ? " -> " : "");
-        }
-        if (path_a.size() > 5) {
-            std::cout << "... (" << path_a.size() - 5 << " more) -> City " << path_a.back() + 1;
+        std::cout << "Path: Distance = " << static_cast<int>(dist_a) << "\nPath: ";
+        for (size_t i = 0; i < path_a.size(); ++i) {
+            std::cout << path_a[i] + 1 << (i + 1 < path_a.size() ? " -> " : "");
         }
         std::cout << "\n";
     } else {
-        std::cout << "Route from City " << src_a + 1 << " to City " << dest_d + 1 
-                  << ": Fallback state: \"No valid route available after disaster.\"\n";
+        std::cout << "\"No valid route available after disaster.\"\n";
     }
 
+    std::cout << "\nRoute from City " << src_b + 1 << " to City " << dest_d + 1 << ":\n";
     if (dist_b != std::numeric_limits<double>::infinity()) {
-        std::cout << "Route from City " << src_b + 1 << " to City " << dest_d + 1 
-                  << ": Distance = " << static_cast<int>(dist_b) << " km\n  Path: ";
-        for (size_t i = 0; i < std::min(static_cast<size_t>(5), path_b.size()); ++i) {
-            std::cout << "City " << path_b[i] + 1 << (i + 1 < path_b.size() ? " -> " : "");
-        }
-        if (path_b.size() > 5) {
-            std::cout << "... (" << path_b.size() - 5 << " more) -> City " << path_b.back() + 1;
+        std::cout << "Path: Distance = " << static_cast<int>(dist_b) << "\nPath: ";
+        for (size_t i = 0; i < path_b.size(); ++i) {
+            std::cout << path_b[i] + 1 << (i + 1 < path_b.size() ? " -> " : "");
         }
         std::cout << "\n";
     } else {
-        std::cout << "Route from City " << src_b + 1 << " to City " << dest_d + 1 
-                  << ": Fallback state: \"No valid route available after disaster.\"\n";
+        std::cout << "\"No valid route available after disaster.\"\n";
     }
 }
+
 
 
 // =========================================================================
@@ -570,32 +562,27 @@ void solve_task4_traffic(const Graph& graph) {
 
     double delay_pct = ((traffic_eff_cost - normal_cost) / normal_cost) * 100.0;
 
-    std::cout << "Normal Route (no traffic):\n";
-    std::cout << "  Distance = " << static_cast<int>(normal_cost) << " km\n";
-    std::cout << "  Path     = ";
-    for (size_t i = 0; i < std::min(static_cast<size_t>(5), normal_path.size()); ++i) {
-        std::cout << "City " << normal_path[i] + 1 << (i + 1 < normal_path.size() ? " -> " : "");
-    }
-    if (normal_path.size() > 5) {
-        std::cout << "... (" << normal_path.size() - 5 << " more) -> City " << normal_path.back() + 1;
+    std::cout << "Normal Route:\n";
+    std::cout << "Distance = " << static_cast<int>(normal_cost) << " km\n";
+    std::cout << "Path: ";
+    for (size_t i = 0; i < normal_path.size(); ++i) {
+        std::cout << normal_path[i] + 1 << (i + 1 < normal_path.size() ? " -> " : "");
     }
     std::cout << "\n\n";
 
-    std::cout << "Traffic-Aware Route:\n";
-    std::cout << "  Distance = " << traffic_phys_dist << " km\n";
-    std::cout << "  Effective Travel Cost = " << std::fixed << std::setprecision(1) << traffic_eff_cost 
-              << " km (adjusted for traffic)\n";
-    std::cout << "  Path     = ";
-    for (size_t i = 0; i < std::min(static_cast<size_t>(5), traffic_path.size()); ++i) {
-        std::cout << "City " << traffic_path[i] + 1 << (i + 1 < traffic_path.size() ? " -> " : "");
-    }
-    if (traffic_path.size() > 5) {
-        std::cout << "... (" << traffic_path.size() - 5 << " more) -> City " << traffic_path.back() + 1;
+    std::cout << "Traffic Route:\n";
+    std::cout << "Distance = " << traffic_phys_dist << " km (Effective Travel Cost = " 
+              << std::fixed << std::setprecision(1) << traffic_eff_cost << " km)\n";
+    std::cout << "Path: ";
+    for (size_t i = 0; i < traffic_path.size(); ++i) {
+        std::cout << traffic_path[i] + 1 << (i + 1 < traffic_path.size() ? " -> " : "");
     }
     std::cout << "\n\n";
 
     std::cout << "Delay = " << std::fixed << std::setprecision(1) << delay_pct << "%\n";
+    std::cout << "[System actively calculated congestion bypass routes based on elevated edge penalties]\n";
 }
+
 
 // =========================================================================
 // BFS Traversal to count connected components in the graph
@@ -679,20 +666,24 @@ void solve_task5_criticality(const Graph& graph) {
 
     std::cout << "\nCritical Diagnostic Output:\n";
     if (most_critical_node != -1) {
-        std::cout << "  Most Critical City: City " << most_critical_node + 1 
-                  << " (Splits graph into " << max_node_components << " components)\n";
+        std::cout << "Most Critical City:\nCity " << most_critical_node + 1 << "\n";
+        std::cout << "Disconnected Components Created:\n" << max_node_components << "\n\n";
     } else {
-        std::cout << "  Most Critical City: None (No single city splits the graph)\n";
+        std::cout << "Most Critical City:\nNone\n\n";
     }
 
     if (most_critical_edge.first != -1) {
-        std::cout << "  Most Critical Road: City " << most_critical_edge.first + 1 
-                  << " - City " << most_critical_edge.second + 1 
-                  << " (Splits graph into " << max_edge_components << " components)\n";
+        std::cout << "Most Critical Road:\n(" << most_critical_edge.first + 1 << "," << most_critical_edge.second + 1 << ")\n";
     } else {
-        std::cout << "  Most Critical Road: None (No single road splits the graph)\n";
+        std::cout << "Most Critical Road:\nNone\n";
+    }
+
+    if (most_critical_node != -1) {
+        std::cout << "[Removal of City " << most_critical_node + 1 << " breaks network graph into " 
+                  << max_node_components << " disconnected subgrids]\n";
     }
 }
+
 
 
 void display_menu() {
