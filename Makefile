@@ -1,4 +1,4 @@
-# Makefile for CS203 Graph Theory Project
+# Makefile for Graph Theory and Route Optimization Project
 
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O3 -I.

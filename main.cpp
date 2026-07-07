@@ -688,7 +688,7 @@ void solve_task5_criticality(const Graph& graph) {
 
 void display_menu() {
     std::cout << "\n============================================\n";
-    std::cout << "  GRAPH THEORY LABORATORY - SUBMISSION SUITE\n";
+    std::cout << "      GRAPH THEORY AND ROUTE OPTIMIZATION\n";
     std::cout << "============================================\n";
     std::cout << " 1. Run Task 1: MST Optimization\n";
     std::cout << " 2. Run Task 2: Strategic City Identification\n";
