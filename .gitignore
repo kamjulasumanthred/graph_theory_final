@@ -1,0 +1,8 @@
+# Compilation outputs
+*.o
+*.out
+main
+build/
+
+# OS files
+.DS_Store
